@@ -70,13 +70,22 @@ public:
 	int GzFlushDisplay2FrameBuffer();
 
 	// HW2: Render methods
+	int scanLine(Edge& edge12, Edge& edge13, bool isV2Left, GzCoord v2);
+
 	int GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList);
 	int GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList);
+
+
 	
 	// Extra methods: NOT part of API - just for general assistance */
 	inline int ARRAY(int x, int y){return x+(y*xres);}	/* simplify fbuf indexing */
 	inline short	ctoi(float color) {return(short)((int)(color * ((1 << 12) - 1)));}		/* convert float color to GzIntensity short */
+
+	
 };
 
 #endif
+
+
+
 

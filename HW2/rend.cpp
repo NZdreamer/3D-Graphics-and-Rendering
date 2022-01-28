@@ -186,6 +186,69 @@ bool GzCoordCmp(const GzCoord* v1, const GzCoord* v2) {
 	return (*v1)[1] < (*v2)[1];
 }
 
+// implement scanline algo
+int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, GzCoord stopVertex) {
+
+	SpanXZ L;
+	SpanXZ R;
+
+	// span edge12 and edge13
+	// include right and bottom
+	//while (edge13.current[1] <= v3[1])
+	while (round(edgeShort.current[1]) < 256 && edgeShort.current[1] <= stopVertex[1]) {	// include bottom, exclude top pixel
+
+		// span setup and advance
+		// span setup
+		if (isV2Left) {
+			L.x = edgeShort.current[0];
+			L.z = edgeShort.current[2];
+			R.x = edgeLong.current[0];
+			R.z = edgeLong.current[2];
+		}
+		else {
+			L.x = edgeLong.current[0];
+			L.z = edgeLong.current[2];
+			R.x = edgeShort.current[0];
+			R.z = edgeShort.current[2];
+		}
+		Span span = { L, R, L, (R.z - L.z) / (R.x - L.x) };
+		//*span.current[1] = *edge13.current[1];
+		float deltaX = ceil(L.x) - L.x;
+
+		// span advance				
+		span.current.x = span.current.x + deltaX;
+		span.current.z = span.current.z + span.slopeZ * deltaX;
+
+		while (round(span.current.x) < 256 && span.current.x <= span.end.x) {	// include right, exclude left pixel
+			// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
+			// Write color value into FB pixel(default or computed color)	??? write into pixelbuffer ???
+			//int curX = round(span.current.x);
+			//int curY = round(edge13.current[1]);
+			int position = ARRAY(round(span.current.x), round(edgeLong.current[1]));
+			//if (position >= 256 * 256) continue;
+			if (span.current.x >= 0 && pixelbuffer[position].z > span.current.z) {
+				pixelbuffer[position].red = ctoi(flatcolor[0]);
+				pixelbuffer[position].green = ctoi(flatcolor[1]);
+				pixelbuffer[position].blue = ctoi(flatcolor[2]);
+				pixelbuffer[position].z = span.current.z;
+			}
+
+			// span advance				
+			span.current.x += 1;
+			span.current.z += span.slopeZ;
+		}
+
+		edgeShort.current[0] += edgeShort.slopeX;
+		edgeShort.current[1] += 1;
+		edgeShort.current[2] += edgeShort.slopeZ;
+
+		edgeLong.current[0] += edgeLong.slopeX;
+		edgeLong.current[1] += 1;
+		edgeLong.current[2] += edgeLong.slopeZ;
+	}
+	return GZ_SUCCESS;
+}
+
 int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueList)
 /* numParts - how many names and values */
 {
@@ -262,14 +325,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 
 
 
-		struct Edge {
-			GzCoord start;	// start vertex
-			GzCoord end;	// end vertex
-			GzCoord current;
-			float slopeX;
-			float slopeZ;
-		};
-
 		// set up edge for three edges
 		Edge edge12 = { {v1[0], v1[1], v1[2]}, {v2[0], v2[1], v2[2]}, {v1[0], v1[1], v1[2]}, (v2[0] - v1[0]) / (v2[1] - v1[1]), (v2[2] - v1[2]) / (v2[1] - v1[1]) };
 		Edge edge13 = { {v1[0], v1[1], v1[2]}, {v3[0], v3[1], v3[2]}, {v1[0], v1[1], v1[2]}, (v3[0] - v1[0]) / (v3[1] - v1[1]), (v3[2] - v1[2]) / (v3[1] - v1[1]) };
@@ -287,21 +342,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 		// advance edges
 		float deltaY = ceil(v1[1]) - v1[1];		
 
-		// Span struct defination
-		typedef struct {
-			float x;
-			float z;
-		}SpanXZ;
-		typedef struct {
-			SpanXZ start;	// start = L(X,Z)
-			SpanXZ end;	// end = R(X,Z)
-			SpanXZ current;	// L(X,Z)
-			float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
-		}Span;
-
-
-		SpanXZ L;
-		SpanXZ R;
 
 		// advance edge12 and edge13
 		edge12.current[0] = edge12.current[0] + edge12.slopeX * deltaY;
@@ -312,60 +352,7 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 		edge13.current[1] = edge13.current[1] + deltaY;
 		edge13.current[2] = edge13.current[2] + edge13.slopeZ * deltaY;
 
-		// span edge12 and edge13
-		// include right and bottom
-		//while (edge13.current[1] <= v3[1])
-		while (round(edge12.current[1]) < 256 && edge12.current[1] <= v2[1]) {	// include bottom, exclude top pixel
-
-			// span setup and advance
-			// span setup
-			if (isV2Left) {
-				L.x = edge12.current[0];
-				L.z = edge12.current[2];
-				R.x = edge13.current[0];
-				R.z = edge13.current[2];
-			}
-			else {
-				L.x = edge13.current[0];
-				L.z = edge13.current[2];
-				R.x = edge12.current[0];
-				R.z = edge12.current[2];
-			}
-			Span span = { L, R, L, (R.z - L.z) / (R.x - L.x) };
-			//*span.current[1] = *edge13.current[1];
-			float deltaX = ceil(L.x) - L.x;
-
-			// span advance				
-			span.current.x = span.current.x + deltaX;
-			span.current.z = span.current.z + span.slopeZ * deltaX;
-			
-			while (round(span.current.x) < 256 && span.current.x <= span.end.x) {	// include right, exclude left pixel
-				// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
-				// Write color value into FB pixel(default or computed color)	??? write into pixelbuffer ???
-				//int curX = round(span.current.x);
-				//int curY = round(edge13.current[1]);
-				int position = ARRAY(round(span.current.x), round(edge13.current[1]));
-				//if (position >= 256 * 256) continue;
-				if (span.current.x >= 0 && pixelbuffer[position].z > span.current.z) {
-					pixelbuffer[position].red = ctoi(flatcolor[0]);
-					pixelbuffer[position].green = ctoi(flatcolor[1]);
-					pixelbuffer[position].blue = ctoi(flatcolor[2]);
-					pixelbuffer[position].z = span.current.z;
-				}
-
-				// span advance				
-				span.current.x += 1;
-				span.current.z += span.slopeZ;
-			}
-
-			edge12.current[0] += edge12.slopeX;
-			edge12.current[1] += 1;
-			edge12.current[2] += edge12.slopeZ;
-
-			edge13.current[0] += edge13.slopeX;
-			edge13.current[1] += 1;
-			edge13.current[2] += edge13.slopeZ;
-		}
+		scanLine(edge12, edge13, isV2Left, v2);
 
 		deltaY = ceil(v2[1]) - v2[1];
 
@@ -374,62 +361,9 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 		edge23.current[1] = edge23.current[1] + deltaY;
 		edge23.current[2] = edge23.current[2] + edge23.slopeZ * deltaY;
 
-		//edge13.current[0] = edge13.current[0] + edge13.slopeX * deltaY;
-		//edge13.current[1] = edge13.current[1] + deltaY;
-		//edge13.current[2] = edge13.current[2] + edge13.slopeZ * deltaY;
-
-		// span edge23 and edge13
-		// include right and bottom
-		while (round(edge13.current[1]) < 256 && edge13.current[1] <= v3[1]) {	// include bottom, exclude top pixel
-			// span setup and advance
-			// span setup
-			if (isV2Left) {
-				L.x = edge23.current[0];
-				L.z = edge23.current[2];
-				R.x = edge13.current[0];
-				R.z = edge13.current[2];
-			}
-			else {
-				L.x = edge13.current[0];
-				L.z = edge13.current[2];
-				R.x = edge23.current[0];
-				R.z = edge23.current[2];
-			}
-			Span span = { L, R, L, (R.z - L.z) / (R.x - L.x) };
-			float deltaX = ceil(L.x) - L.x;
-			// span advance	
-			span.current.x = span.current.x + deltaX;
-			span.current.z = span.current.z + span.slopeZ * deltaX;
-
-			while (round(span.current.x) < 256 && span.current.x <= span.end.x) {	// include right, exclude left pixel
-				
-				// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
-				// Write color value into FB pixel(default or computed color)	??? write into pixelbuffer ???
-				int position = ARRAY(round(span.current.x),round(edge13.current[1]));
-				//if (position >= 256 * 256) continue;
-				if (span.current.x >= 0 && pixelbuffer[position].z > span.current.z) {
-					pixelbuffer[position].red = ctoi(flatcolor[0]);
-					pixelbuffer[position].green = ctoi(flatcolor[1]);
-					pixelbuffer[position].blue = ctoi(flatcolor[2]);
-					pixelbuffer[position].z = span.current.z;
-				}
-				// span advance				
-				span.current.x += 1;
-				span.current.z += span.slopeZ;
-			}
-
-			edge23.current[0] += edge23.slopeX;
-			edge23.current[1] += 1;
-			edge23.current[2] += edge23.slopeZ;
-
-			edge13.current[0] += edge13.slopeX;
-			edge13.current[1] += 1;
-			edge13.current[2] += edge13.slopeZ;
-		}
-
+		scanLine(edge23, edge13, isV2Left, v3);
 
 	}
-
 
 	return GZ_SUCCESS;
 }
