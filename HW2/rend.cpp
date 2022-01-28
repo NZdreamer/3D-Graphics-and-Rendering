@@ -232,7 +232,6 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, GzCoord s
 				pixelbuffer[position].blue = ctoi(flatcolor[2]);
 				pixelbuffer[position].z = span.current.z;
 			}
-
 			// span advance				
 			span.current.x += 1;
 			span.current.z += span.slopeZ;
@@ -322,7 +321,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 			v2[0] = v3[0]; v2[1] = v3[1]; v2[2] = v3[2];
 			v3[0] = temp[0]; v3[1] = temp[1]; v3[2] = temp[2];
 		}*/
-
 
 
 		// set up edge for three edges

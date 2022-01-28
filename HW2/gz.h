@@ -96,6 +96,7 @@ typedef struct {
 #define SPAN
 #endif
 
+
 #define	MAXXRES	1024	/* put some bounds on size in case of error */
 #define	MAXYRES	1024
 
