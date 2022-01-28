@@ -1,0 +1,29 @@
+int a[3];
+int *a;
+
+void func(int n, int* b)
+{
+	*(b+2)
+	b[2]
+}
+
+main() {
+	func(3, a);
+}
+
+
+int a = 0;
+int* p = NULL;
+
+p = &a;
+
+
+int a = 0;
+int& ref = a;
+
+Student stu[10];
+
+bool cmp(const Student& a, const Student& b)
+{}
+
+sort(stu, stu + 10, cmp);
