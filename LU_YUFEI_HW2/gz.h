@@ -66,11 +66,20 @@ typedef	struct {
 #define GZ_PIXEL
 #endif;
 
+#ifndef POINT_XYZ
+typedef struct {
+	float x;
+	float y;
+	float z;
+}PointXyz;
+#define POINT_XYZ
+#endif;
+
 #ifndef EDGE
 typedef struct {
-	GzCoord start;	// start vertex
-	GzCoord end;	// end vertex
-	GzCoord current;
+	PointXyz start;	// start vertex
+	PointXyz end;	// end vertex
+	PointXyz cur;
 	float slopeX;
 	float slopeZ;
 }Edge;
@@ -90,7 +99,7 @@ typedef struct {
 typedef struct {
 	SpanXZ start;	// start = L(X,Z)
 	SpanXZ end;	// end = R(X,Z)
-	SpanXZ current;	// L(X,Z)
+	SpanXZ cur;	// L(X,Z)
 	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
 }Span;
 #define SPAN

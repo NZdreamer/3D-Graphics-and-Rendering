@@ -194,56 +194,56 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, GzCoord s
 
 	// span edge12 and edge13
 	// include right and bottom
-	//while (edge13.current[1] <= v3[1])
-	while (round(edgeShort.current[1]) < 256 && edgeShort.current[1] <= stopVertex[1]) {	// include bottom, exclude top pixel
+	//while (edge13.current.y <= v3[1])
+	while (round(edgeShort.cur.y) < 256 && edgeShort.cur.y <= stopVertex[1]) {	// include bottom, exclude top pixel
 
 		// span setup and advance
 		// span setup
 		if (isV2Left) {
-			L.x = edgeShort.current[0];
-			L.z = edgeShort.current[2];
-			R.x = edgeLong.current[0];
-			R.z = edgeLong.current[2];
+			L.x = edgeShort.cur.x;
+			L.z = edgeShort.cur.z;
+			R.x = edgeLong.cur.x;
+			R.z = edgeLong.cur.z;
 		}
 		else {
-			L.x = edgeLong.current[0];
-			L.z = edgeLong.current[2];
-			R.x = edgeShort.current[0];
-			R.z = edgeShort.current[2];
+			L.x = edgeLong.cur.x;
+			L.z = edgeLong.cur.z;
+			R.x = edgeShort.cur.x;
+			R.z = edgeShort.cur.z;
 		}
 		Span span = { L, R, L, (R.z - L.z) / (R.x - L.x) };
-		//*span.current[1] = *edge13.current[1];
+		//*span.current.y = *edge13.current.y;
 		float deltaX = ceil(L.x) - L.x;
 
 		// span advance				
-		span.current.x = span.current.x + deltaX;
-		span.current.z = span.current.z + span.slopeZ * deltaX;
+		span.cur.x = span.cur.x + deltaX;
+		span.cur.z = span.cur.z + span.slopeZ * deltaX;
 
-		while (round(span.current.x) < 256 && span.current.x <= span.end.x) {	// include right, exclude left pixel
+		while (round(span.cur.x) < 256 && span.cur.x <= span.end.x) {	// include right, exclude left pixel
 			// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
 			// Write color value into FB pixel(default or computed color)	??? write into pixelbuffer ???
 			//int curX = round(span.current.x);
-			//int curY = round(edge13.current[1]);
-			int position = ARRAY(round(span.current.x), round(edgeLong.current[1]));
+			//int curY = round(edge13.current.y);
+			int position = ARRAY(round(span.cur.x), round(edgeLong.cur.y));
 			//if (position >= 256 * 256) continue;
-			if (span.current.x >= 0 && pixelbuffer[position].z > span.current.z) {
+			if (span.cur.x >= 0 && pixelbuffer[position].z > span.cur.z) {
 				pixelbuffer[position].red = ctoi(flatcolor[0]);
 				pixelbuffer[position].green = ctoi(flatcolor[1]);
 				pixelbuffer[position].blue = ctoi(flatcolor[2]);
-				pixelbuffer[position].z = span.current.z;
+				pixelbuffer[position].z = span.cur.z;
 			}
 			// span advance				
-			span.current.x += 1;
-			span.current.z += span.slopeZ;
+			span.cur.x += 1;
+			span.cur.z += span.slopeZ;
 		}
 
-		edgeShort.current[0] += edgeShort.slopeX;
-		edgeShort.current[1] += 1;
-		edgeShort.current[2] += edgeShort.slopeZ;
+		edgeShort.cur.x += edgeShort.slopeX;
+		edgeShort.cur.y += 1;
+		edgeShort.cur.z += edgeShort.slopeZ;
 
-		edgeLong.current[0] += edgeLong.slopeX;
-		edgeLong.current[1] += 1;
-		edgeLong.current[2] += edgeLong.slopeZ;
+		edgeLong.cur.x += edgeLong.slopeX;
+		edgeLong.cur.y += 1;
+		edgeLong.cur.z += edgeLong.slopeZ;
 	}
 	return GZ_SUCCESS;
 }
@@ -277,28 +277,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 			v[i] = &(vVal[i]);
 		}
 
-		//v[0][0] = vertexList[0][0];
-		//v[0][1] = vertexList[0][1];
-		//v[0][2] = vertexList[0][2];
-		//v[1][0] = vertexList[1][0];
-		//v[1][1] = vertexList[1][1];
-		//v[1][2] = vertexList[1][2];
-		//v[2][0] = vertexList[2][0];
-		//v[2][1] = vertexList[2][1];
-		//v[2][2] = vertexList[2][2];
-		/*memcpy(v1, vertexlist[0], sizeof(gzcoord));
-		memcpy(v2, vertexlist[1], sizeof(gzcoord));
-		memcpy(v3, vertexlist[2], sizeof(gzcoord));*/
-		//v1[0] = vertexList[0][0];
-		//v1[1] = vertexList[0][1];
-		//v1[2] = vertexList[0][2];
-		//v2[0] = vertexList[1][0];
-		//v2[1] = vertexList[1][1];
-		//v2[2] = vertexList[1][2];
-		//v3[0] = vertexList[2][0];
-		//v3[1] = vertexList[2][1];
-		//v3[2] = vertexList[2][2];
-
 
 		// sort v1, v2, v3 by y in increasing order
 		std::sort(v, v + 3, GzCoordCmp);
@@ -322,7 +300,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 			v3[0] = temp[0]; v3[1] = temp[1]; v3[2] = temp[2];
 		}*/
 
-
 		// set up edge for three edges
 		Edge edge12 = { {v1[0], v1[1], v1[2]}, {v2[0], v2[1], v2[2]}, {v1[0], v1[1], v1[2]}, (v2[0] - v1[0]) / (v2[1] - v1[1]), (v2[2] - v1[2]) / (v2[1] - v1[1]) };
 		Edge edge13 = { {v1[0], v1[1], v1[2]}, {v3[0], v3[1], v3[2]}, {v1[0], v1[1], v1[2]}, (v3[0] - v1[0]) / (v3[1] - v1[1]), (v3[2] - v1[2]) / (v3[1] - v1[1]) };
@@ -342,22 +319,22 @@ int GzRender::GzPutTriangle(int	numParts, GzToken* nameList, GzPointer* valueLis
 
 
 		// advance edge12 and edge13
-		edge12.current[0] = edge12.current[0] + edge12.slopeX * deltaY;
-		edge12.current[1] = edge12.current[1] + deltaY;
-		edge12.current[2] = edge12.current[2] + edge12.slopeZ * deltaY;
+		edge12.cur.x = edge12.cur.x + edge12.slopeX * deltaY;
+		edge12.cur.y = edge12.cur.y + deltaY;
+		edge12.cur.z = edge12.cur.z + edge12.slopeZ * deltaY;
 
-		edge13.current[0] = edge13.current[0] + edge13.slopeX * deltaY;
-		edge13.current[1] = edge13.current[1] + deltaY;
-		edge13.current[2] = edge13.current[2] + edge13.slopeZ * deltaY;
+		edge13.cur.x = edge13.cur.x + edge13.slopeX * deltaY;
+		edge13.cur.y = edge13.cur.y + deltaY;
+		edge13.cur.z = edge13.cur.z + edge13.slopeZ * deltaY;
 
 		scanLine(edge12, edge13, isV2Left, v2);
 
 		deltaY = ceil(v2[1]) - v2[1];
 
 		// advance edge23 and edge13
-		edge23.current[0] = edge23.current[0] + edge23.slopeX * deltaY;
-		edge23.current[1] = edge23.current[1] + deltaY;
-		edge23.current[2] = edge23.current[2] + edge23.slopeZ * deltaY;
+		edge23.cur.x = edge23.cur.x + edge23.slopeX * deltaY;
+		edge23.cur.y = edge23.cur.y + deltaY;
+		edge23.cur.z = edge23.cur.z + edge23.slopeZ * deltaY;
 
 		scanLine(edge23, edge13, isV2Left, v3);
 

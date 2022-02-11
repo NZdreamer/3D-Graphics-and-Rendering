@@ -1,5 +1,5 @@
 add three struct in 'gz.h'
-Edge, SpanXZ, Span
+POINT_XYZ, Edge, SpanXZ, Span
 
 add a function def in 'rend,h'
 int scanLine(Edge& edge12, Edge& edge13, bool isV2Left, GzCoord v2);

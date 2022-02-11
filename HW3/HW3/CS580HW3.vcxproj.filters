@@ -2,15 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{b05f5511-eb60-4aa0-8e4f-5b5f8a37fc14}</UniqueIdentifier>
+      <UniqueIdentifier>{5a7c00fb-8234-4b55-ac07-9db21f506ebe}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{b3a6e9e4-eac4-4269-9a10-98c140fabbcf}</UniqueIdentifier>
+      <UniqueIdentifier>{190cf0bc-c68e-4064-8cd0-b235a419c187}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{80708c1b-39a2-45a1-a592-a3eb26f311f4}</UniqueIdentifier>
+      <UniqueIdentifier>{f9eea8d2-e64a-49e4-9e71-4a5a4d7ceea2}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
   </ItemGroup>
@@ -18,7 +18,7 @@
     <ClCompile Include="Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Application2.cpp">
+    <ClCompile Include="Application3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CS580HW.cpp">
@@ -36,7 +36,16 @@
     <ClCompile Include="rend.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RotateDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScaleDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="StdAfx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TranslateDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -49,7 +58,7 @@
     <ClInclude Include="Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Application2.h">
+    <ClInclude Include="Application3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CS580HW.h">
@@ -73,7 +82,16 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RotateDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScaleDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TranslateDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -82,6 +100,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\CS580HWDoc.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\Toolbar.bmp">
