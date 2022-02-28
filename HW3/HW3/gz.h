@@ -120,44 +120,25 @@ typedef	struct {
 #define GZ_PIXEL
 #endif;
 
-#ifndef POINT_XYZ
-typedef struct {
-	float x;
-	float y;
-	float z;
-}PointXyz;
-#define POINT_XYZ
-#endif;
-
-#ifndef EDGE
-typedef struct {
-	PointXyz start;	// start vertex
-	PointXyz end;	// end vertex
-	PointXyz cur;
-	float slopeX;
-	float slopeZ;
-}Edge;
-#define EDGE
-#endif
-
-// Span struct defination
-#ifndef SPAN_XZ
-typedef struct {
-	float x;
-	float z;
-}SpanXZ;
-#define SPAN_XZ
-#endif
-
-#ifndef SPAN
-typedef struct {
-	SpanXZ start;	// start = L(X,Z)
-	SpanXZ end;	// end = R(X,Z)
-	SpanXZ cur;	// L(X,Z)
-	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
-}Span;
-#define SPAN
-#endif
+//#ifndef POINT_XYZ
+//typedef struct {
+//	float x;
+//	float y;
+//	float z;
+//}PointXyz;
+//#define POINT_XYZ
+//#endif
+//
+//#ifndef EDGE
+//struct Edge {
+//	PointXyz start;	// start vertex
+//	PointXyz end;	// end vertex
+//	PointXyz cur;
+//	float slopeX;
+//	float slopeZ;
+//};
+//#define EDGE
+//#endif
 
 #define	MAXXRES	1024	/* put some bounds on size in case of error */
 #define	MAXYRES	1024

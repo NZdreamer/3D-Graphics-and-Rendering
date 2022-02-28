@@ -2,15 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{f3ad3869-d6bb-4cb5-bf3a-b05c8c4b5ec0}</UniqueIdentifier>
+      <UniqueIdentifier>{9e79a090-9115-4aeb-a6ab-03ac6f0d91b6}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{11804dd5-d219-47a2-979c-3a6160e515d1}</UniqueIdentifier>
+      <UniqueIdentifier>{d38228c8-5181-4e40-9bad-4c03d0375539}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{b947b624-02b9-40e1-822d-e00fc1c201df}</UniqueIdentifier>
+      <UniqueIdentifier>{a5545846-ee1b-4a79-be05-8bfb47e49758}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
   </ItemGroup>
@@ -18,7 +18,7 @@
     <ClCompile Include="Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Application3.cpp">
+    <ClCompile Include="Application4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CS580HW.cpp">
@@ -48,6 +48,9 @@
     <ClCompile Include="TranslateDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CS580HW.rc">
@@ -58,7 +61,7 @@
     <ClInclude Include="Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Application3.h">
+    <ClInclude Include="Application4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CS580HW.h">
@@ -92,6 +95,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TranslateDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
