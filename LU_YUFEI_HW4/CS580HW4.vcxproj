@@ -14,7 +14,7 @@
     <SccProjectName />
     <SccLocalPath />
     <Keyword>MFCProj</Keyword>
-    <ProjectGuid>{5E3F9D62-8154-43A5-95C4-3C10191286D3}</ProjectGuid>
+    <ProjectGuid>{B9293EB6-7E62-4222-A06D-F2EDEFB0ACA1}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

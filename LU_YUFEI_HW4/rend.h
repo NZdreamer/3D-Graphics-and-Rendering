@@ -24,7 +24,6 @@
 
 
 
-
 class GzRender{			/* define a renderer */
   
 
