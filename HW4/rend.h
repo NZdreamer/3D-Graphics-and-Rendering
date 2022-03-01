@@ -64,7 +64,7 @@ public:
 	int GzFlushDisplay2FrameBuffer();
 
 	// HW2: Render methods
-	int scanLine(Edge& edge12, Edge& edge13, bool isV2Left, Point3d v2);
+	int scanLineHalf(Edge& edge12, Edge& edge13, bool isV2Left, Point3d v2);
 
 	int GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList);
 	int GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList);
@@ -101,7 +101,7 @@ public:
 	int GzRender::GzVecPlus(float* x, float* y);
 
 	//int GzRender::SLflat(Data data);
-	int GzRender::interpolateZ(Data* data);
+	int GzRender::scanLine(Data* data);
 	int GzRender::advanceEdge(Edge& e, float delta);
 	int GzRender::advanceSpan(Span& s, float delta);
 };

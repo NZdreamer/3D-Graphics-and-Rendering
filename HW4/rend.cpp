@@ -611,7 +611,7 @@ int GzRender::lightingEquation(Data& data, GzCoord N) {
 }
 
 // implement scanline algo
-int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d stopVertex) {
+int GzRender::scanLineHalf(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d stopVertex) {
 
 	Point3d L;
 	Point3d R;
@@ -662,11 +662,6 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 						ctoi(data.color[0]), ctoi(data.color[1]), ctoi(data.color[2]), 1, span.cur.z);
 					break;
 				}
-
-				//pixelbuffer[position].red = ctoi(flatcolor[0]);
-				//pixelbuffer[position].green = ctoi(flatcolor[1]);
-				//pixelbuffer[position].blue = ctoi(flatcolor[2]);
-				//pixelbuffer[position].z = span.cur.z;
 			}
 			// span advance	
 			advanceSpan(span, 1);
@@ -745,23 +740,23 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 		lightingEquation(data[0], normal);
 		memcpy(flatcolor, data[0].color, sizeof(GzColor));
-		interpolateZ(data);
+		scanLine(data);
 	}
 	else if (interp_mode == GZ_COLOR) {
 		lightingEquation(data[0], data[0].normal);
 		lightingEquation(data[1], data[1].normal);
 		lightingEquation(data[2], data[2].normal);
-		interpolateZ(data);
+		scanLine(data);
 	}
 	else if (interp_mode == GZ_NORMALS) {
-		interpolateZ(data);
+		scanLine(data);
 	}
 	
 
 	return GZ_SUCCESS;
 }
 
-int GzRender::interpolateZ(Data* data) {
+int GzRender::scanLine(Data* data) {
 
 	// HW 3
 // apply the set of transformations to every vertex of every triangle
@@ -806,14 +801,14 @@ int GzRender::interpolateZ(Data* data) {
 	advanceEdge(edge12, deltaY);
 	advanceEdge(edge13, deltaY);
 
-	scanLine(edge12, edge13, isV2Left, p2);
+	scanLineHalf(edge12, edge13, isV2Left, p2);
 
 	deltaY = ceil(p2.y) - p2.y;
 
 	// advance edge23 and edge13
 	advanceEdge(edge23, deltaY);
 
-	scanLine(edge23, edge13, isV2Left, p3);
+	scanLineHalf(edge23, edge13, isV2Left, p3);
 
 	return GZ_SUCCESS;
 }
