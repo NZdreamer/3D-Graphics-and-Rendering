@@ -20,6 +20,13 @@ Edge::Edge(const Point3d& start, const Point3d& end) {
 	this->slopeZ = (end.z - start.z) / (end.y - start.y);
 }
 
+Span::Span(const Point3d& start, const Point3d& end) {
+	this->start = start;
+	this->end = end;
+	this->cur = start;
+	this->slopeZ = (end.z - start.z) / (end.x - start.x);
+}
+
 Point3d* test() {
 	Point3d* p2 = new Point3d(0, 1, 2);
 	Point3d p1(0, 1, 2);

@@ -169,8 +169,7 @@ int GzRender::GzDefault()
 	for (int i = 0; i < xres * yres; i++) {
 		pixelbuffer[i] = { 2000, 555, 555, 1, INT_MAX };	// initailze z to INT_MAX
 	}
-	// HW 4
-	numlights = 0;
+
 	return GZ_SUCCESS;
 }
 
@@ -244,11 +243,24 @@ int GzRender::GzBeginRender()
 
 	// init Ximage
 	matlevel = -1;
+	normLevel = -1;
 
 	GzPushMatrix(Xsp);
 	GzPushMatrix(m_camera.Xpi);
 	GzPushMatrix(m_camera.Xiw);
+
+	GzMatrix I = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+	GzXnormPush(I);
+	GzXnormPush(I);
 	GzXnormPush(m_camera.Xiw);
+
+	// HW 4
+	numlights = 0;
 
 	return GZ_SUCCESS;
 }
@@ -268,6 +280,14 @@ int GzRender::dotProduct(GzMatrix a, GzMatrix b, GzMatrix res)
 	return GZ_SUCCESS;
 }
 
+int GzRender::crossProduct(float* a, float* b, float* res) {
+	res[0] = a[1] * b[2] - a[2] * b[1];
+	res[1] = a[2] * b[0] - a[0] * b[2];
+	res[2] = a[0] * b[1] - a[1] * b[0];
+
+	return GZ_SUCCESS;
+}
+
 int GzRender::GzPutCamera(GzCamera camera)
 {
 /* HW 3.8 
@@ -282,13 +302,16 @@ int GzRender::GzPutCamera(GzCamera camera)
 }
 
 int GzRender::GzXnormPush(GzMatrix matrix) {
-	if (matlevel >= MATLEVELS || matlevel < 0) {
-		return GZ_FAILURE;
+	if (normLevel == -1) {
+		memcpy(Xnorm[0], matrix, sizeof(GzMatrix));
+		normLevel = 0;
 	}
 	else {
 		GzMatrix newMatrix;
-		dotProduct(Xnorm[matlevel], matrix, newMatrix);
-		memcpy(Xnorm[matlevel], newMatrix, sizeof(GzMatrix));
+		dotProduct(Xnorm[normLevel], matrix, newMatrix);
+		normLevel++;
+		memcpy(Xnorm[normLevel], newMatrix, sizeof(GzMatrix));
+		
 	}
 
 	return GZ_SUCCESS;
@@ -520,11 +543,12 @@ int GzRender::GzVecPlus(float* x, float* y) {
 }
 
 // calculate lighting equation a.k.a, color each pixel
-int GzRender::lightingEquation(Data& data) {
-	float E[3] = { 0, 0, 1 };
-	GzCoord N;
-	memcpy(N, data.normal, sizeof(GzCoord));
-	normToImageSpace(Xnorm[matlevel], N);
+int GzRender::lightingEquation(Data& data, GzCoord N) {
+	float E[3] = { 0, 0, -1 };
+	// GzCoord N;
+	// memcpy(N, data.normal, sizeof(GzCoord));
+	// applyTrans(Xnorm[normLevel], N);
+	normToImageSpace(Xnorm[normLevel], N);
 	GzVecNomalize(N);
 	GzCoord L;
 	GzCoord R;
@@ -534,6 +558,10 @@ int GzRender::lightingEquation(Data& data) {
 
 	GzColor sSum;	// sepcular sum
 	GzColor dSum;	// diffusion sum
+	for (int i = 0; i < 3; i++) {
+		sSum[i] = 0;
+		dSum[i] = 0;
+	}
 
 	float NLprod;
 	float NEprod = getProduct(N, E);
@@ -563,7 +591,8 @@ int GzRender::lightingEquation(Data& data) {
 		// sepcular
 		float REprod = getProduct(R, E);
 		if (REprod < 0) REprod = 0;
-		GzVecMultiplyConst(Ie, pow(REprod, spec), tmp);
+		float REprodSpec = pow(REprod, spec);
+		GzVecMultiplyConst(Ie, REprodSpec, tmp);
 		GzVecPlus(sSum, tmp);
 		
 		//diffusion
@@ -582,10 +611,10 @@ int GzRender::lightingEquation(Data& data) {
 }
 
 // implement scanline algo
-int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d stopVertex, int z) {
+int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d stopVertex) {
 
-	SpanXZ L;
-	SpanXZ R;
+	Point3d L;
+	Point3d R;
 
 	// span edge12 and edge13
 	// include right and bottom
@@ -593,27 +622,31 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 	while (
 		round(edgeShort.cur.y) < 256 && edgeShort.cur.y <= stopVertex.y) {	// include bottom, exclude top pixel
 
+
 		// span setup and advance
 		// span setup
 		if (isV2Left) {
-			L.x = edgeShort.cur.x;
-			L.z = edgeShort.cur.z;
-			R.x = edgeLong.cur.x;
-			R.z = edgeLong.cur.z;
+			L = edgeShort.cur;
+			R = edgeLong.cur;
+			/*span = Span(edgeShort.cur, edgeLong.cur);
+			deltaX = ceil(edgeShort.cur.x - edgeShort.cur.x);*/
 		}
 		else {
-			L.x = edgeLong.cur.x;
-			L.z = edgeLong.cur.z;
-			R.x = edgeShort.cur.x;
-			R.z = edgeShort.cur.z;
+			L = edgeLong.cur;
+			R = edgeShort.cur;
+			/*span = Span(edgeLong.cur, edgeShort.cur);
+			deltaX = ceil(edgeLong.cur.x - edgeLong.cur.x);*/
+
 		}
-		Span span = { L, R, L, (R.z - L.z) / (R.x - L.x) };
+		Span span(L, R);
+
 		//*span.current.y = *edge13.current.y;
 		float deltaX = ceil(L.x) - L.x;
 
-		// span advance				
-		span.cur.x = span.cur.x + deltaX;
-		span.cur.z = span.cur.z + span.slopeZ * deltaX;
+		// span advance		
+		advanceSpan(span, deltaX);
+		//span.cur.x = span.cur.x + deltaX;
+		//span.cur.z = span.cur.z + span.slopeZ * deltaX;
 
 		while (round(span.cur.x) < 256 && span.cur.x <= span.end.x) {	// include right, exclude left pixel
 			// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
@@ -623,27 +656,28 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 			int position = ARRAY(round(span.cur.x), round(edgeLong.cur.y));
 			//if (position >= 256 * 256) continue;
 			if (span.cur.x >= 0 && edgeLong.cur.y >= 0 && pixelbuffer[position].z > span.cur.z) {
-				// GzPut(span.cur.x, edgeLong.cur.y,
-				// 	ctoi(flatcolor[0]), ctoi(flatcolor[1]), ctoi(flatcolor[2]), 1, span.cur.z);
-
-
+				GzPut(span.cur.x,
+					edgeLong.cur.y,
+					ctoi(flatcolor[0]),
+					ctoi(flatcolor[1]),
+					ctoi(flatcolor[2]),
+					1,
+					span.cur.z);
 				//pixelbuffer[position].red = ctoi(flatcolor[0]);
 				//pixelbuffer[position].green = ctoi(flatcolor[1]);
 				//pixelbuffer[position].blue = ctoi(flatcolor[2]);
 				//pixelbuffer[position].z = span.cur.z;
 			}
-			// span advance				
-			span.cur.x += 1;
-			span.cur.z += span.slopeZ;
+			// span advance	
+			advanceSpan(span, 1);
+
+			//span.cur.x += 1;
+			//span.cur.z += span.slopeZ;
 		}
 
-		edgeShort.cur.x += edgeShort.slopeX;
-		edgeShort.cur.y += 1;
-		edgeShort.cur.z += edgeShort.slopeZ;
+		advanceEdge(edgeShort, 1);
+		advanceEdge(edgeLong, 1);
 
-		edgeLong.cur.x += edgeLong.slopeX;
-		edgeLong.cur.y += 1;
-		edgeLong.cur.z += edgeLong.slopeZ;
 	}
 	return GZ_SUCCESS;
 }
@@ -680,9 +714,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	*/
 
 	// get the three vertex
-	GzCoord v1;
-	GzCoord v2;
-	GzCoord v3;
 
 	Data data[3];
 
@@ -703,9 +734,33 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 			}
 		}
 	}
+	if (interp_mode == GZ_FLAT) {
+		// calculate norm for flat mode
+		GzCoord normal;
+		GzCoord ba;
+		GzCoord cb;
+		for (int i = 0; i < 3; i++) {
+			ba[i] = data[1].v[i] - data[0].v[i];
+			cb[i] = data[2].v[i] - data[1].v[i];
+		}
+		crossProduct(ba, cb, normal);
+
+		lightingEquation(data[0], normal);
+		memcpy(flatcolor, data[0].color, sizeof(GzColor));
+		interpolateZ(data);
+	}
+	else if (interp_mode == GZ_COLOR) {
+
+	}
+	
+
+	return GZ_SUCCESS;
+}
+
+int GzRender::interpolateZ(Data* data) {
 
 	// HW 3
-	// apply the set of transformations to every vertex of every triangle
+// apply the set of transformations to every vertex of every triangle
 	for (int i = 0; i < 3; ++i) {
 		applyTrans(Ximage[matlevel], data[i].v);
 	}
@@ -718,94 +773,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		}
 	}
 
-	// select mode
-	//switch (interp_mode) {
-	//case GZ_FLAT:
-	//	SLflat(data);
-	//	break;
-	//case GZ_COLOR:
-	//	SLGouraud();
-	//	break;
-	//case GZ_NORMALS:
-	//	SLPhong();
-	//	break;
-	//}
-
-	 
-
 	// sort v1, v2, v3 by y in increasing order
 	std::sort(data, data + 3, GzCoordCmp);
-	memcpy(v1, data[0].v, sizeof(GzCoord));
-	memcpy(v2, data[1].v, sizeof(GzCoord));
-	memcpy(v3, data[2].v, sizeof(GzCoord));
 
-	Point3d p1(v1);
-	Point3d p2(v2);
-	Point3d p3(v3);
-
-	//if (interp_mode == GZ_FLAT) {
-	//	lightingEquation(data[0]);
-	//	memcpy(flatcolor, data[0].color, sizeof(GzColor));
-	//	interpolateZ(p1, p2, p3, 0);
-	//}
-	//else if (interp_mode == GZ_COLOR) {
-	//	for (int i = 0; i < 3; i++) {
-	//		lightingEquation(data[i]);
-	//	}
-	//	interpolateZ(p1, p2, p3, 0);
-	//	interpolateZ(p1, p2, p3, 1);
-	//	interpolateZ(p1, p2, p3, 2);
-	//	interpolateZ(p1, p2, p3, 3);
-	//}
-	//else if (interp_mode == GZ_NORMALS) {
-
-	//}
-	 
-	 
-		// set up edge for three edges
-	Edge edge12(p1, p2);
-	Edge edge13(p1, p3);
-	Edge edge23(p2, p3);
-
-
-	// sort edges by L or R
-	// slope comparision
-	bool isV2Left = true;
-
-	float slope12 = edge12.slopeX;
-	float slope13 = edge13.slopeX;
-	if (slope12 > slope13) isV2Left = false;
-
-	// advance edges
-	float deltaY = ceil(p1.y) - p1.y;
-	int z = 0;
-
-	// advance edge12 and edge13
-	edge12.cur.x = edge12.cur.x + edge12.slopeX * deltaY;
-	edge12.cur.y = edge12.cur.y + deltaY;
-	edge12.cur.z = edge12.cur.z + edge12.slopeZ * deltaY;
-
-	edge13.cur.x = edge13.cur.x + edge13.slopeX * deltaY;
-	edge13.cur.y = edge13.cur.y + deltaY;
-	edge13.cur.z = edge13.cur.z + edge13.slopeZ * deltaY;
-
-	scanLine(edge12, edge13, isV2Left, p2, z);
-
-	deltaY = ceil(p2.y) - p2.y;
-
-	// advance edge23 and edge13
-	edge23.cur.x = edge23.cur.x + edge23.slopeX * deltaY;
-	edge23.cur.y = edge23.cur.y + deltaY;
-	edge23.cur.z = edge23.cur.z + edge23.slopeZ * deltaY;
-
-	scanLine(edge23, edge13, isV2Left, p3, z);
-	
-
-	return GZ_SUCCESS;
-}
-
-int GzRender::interpolateZ(Point3d p1, Point3d p2, Point3d p3, int z) {
-
+	Point3d p1(data[0].v);
+	Point3d p2(data[1].v);
+	Point3d p3(data[2].v);
 
 	// set up edge for three edges
 	Edge edge12(p1, p2);
@@ -817,6 +790,7 @@ int GzRender::interpolateZ(Point3d p1, Point3d p2, Point3d p3, int z) {
 	// slope comparision
 	bool isV2Left = true;
 
+	// TODO: if v2[1] == v1[1]
 	float slope12 = edge12.slopeX;
 	float slope13 = edge13.slopeX;
 	if (slope12 > slope13) isV2Left = false;
@@ -826,25 +800,32 @@ int GzRender::interpolateZ(Point3d p1, Point3d p2, Point3d p3, int z) {
 
 
 	// advance edge12 and edge13
-	edge12.cur.x = edge12.cur.x + edge12.slopeX * deltaY;
-	edge12.cur.y = edge12.cur.y + deltaY;
-	edge12.cur.z = edge12.cur.z + edge12.slopeZ * deltaY;
+	advanceEdge(edge12, deltaY);
+	advanceEdge(edge13, deltaY);
 
-	edge13.cur.x = edge13.cur.x + edge13.slopeX * deltaY;
-	edge13.cur.y = edge13.cur.y + deltaY;
-	edge13.cur.z = edge13.cur.z + edge13.slopeZ * deltaY;
-
-	scanLine(edge12, edge13, isV2Left, p2, z);
+	scanLine(edge12, edge13, isV2Left, p2);
 
 	deltaY = ceil(p2.y) - p2.y;
 
 	// advance edge23 and edge13
-	edge23.cur.x = edge23.cur.x + edge23.slopeX * deltaY;
-	edge23.cur.y = edge23.cur.y + deltaY;
-	edge23.cur.z = edge23.cur.z + edge23.slopeZ * deltaY;
+	advanceEdge(edge23, deltaY);
 
-	scanLine(edge23, edge13, isV2Left, p3, z);
+	scanLine(edge23, edge13, isV2Left, p3);
 
 	return GZ_SUCCESS;
+}
 
+int GzRender::advanceEdge(Edge& e, float delta) {
+	e.cur.x = e.cur.x + e.slopeX * delta;
+	e.cur.y = e.cur.y + delta;
+	e.cur.z = e.cur.z + e.slopeZ * delta;
+
+	return GZ_SUCCESS;
+}
+
+int GzRender::advanceSpan(Span& s, float delta) {
+	s.cur.x = s.cur.x + delta;
+	s.cur.z = s.cur.z + s.slopeZ * delta;
+
+	return GZ_SUCCESS;
 }

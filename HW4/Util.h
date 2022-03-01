@@ -8,6 +8,14 @@ public:
 	float y;
 	float z;
 
+	float r;
+	float g;
+	float b;
+
+	float nx;
+	float ny;
+	float nz;
+
 	Point3d() = default;
 	Point3d(float x, float y, float z);
 	Point3d(GzCoord c);
@@ -26,18 +34,25 @@ public:
 	Edge(const Point3d& start, const Point3d& end);
 };
 
-// Span struct defination
-struct SpanXZ {
-	float x;
-	float z;
+class Span {
+public:
+	Point3d start;	// start = L(X,Z)
+	Point3d end;	// end = R(X,Z)
+	Point3d cur;	// L(X,Z)
+	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
+	
+	Span() = default;
+	Span(const Point3d& start, const Point3d& end);
+
 };
 
-struct Span {
-	SpanXZ start;	// start = L(X,Z)
-	SpanXZ end;	// end = R(X,Z)
-	SpanXZ cur;	// L(X,Z)
-	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
-};
+
+//struct Span {
+//	Point3d start;	// start = L(X,Z)
+//	Point3d end;	// end = R(X,Z)
+//	Point3d cur;	// L(X,Z)
+//	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
+//};
 
 struct Data {
 	GzCoord v;

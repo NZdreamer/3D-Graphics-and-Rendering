@@ -48,6 +48,7 @@ public:
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
+	short	normLevel;
 
   	// Constructors
 	GzRender(int xRes, int yRes);
@@ -63,13 +64,14 @@ public:
 	int GzFlushDisplay2FrameBuffer();
 
 	// HW2: Render methods
-	int scanLine(Edge& edge12, Edge& edge13, bool isV2Left, Point3d v2, int z);
+	int scanLine(Edge& edge12, Edge& edge13, bool isV2Left, Point3d v2);
 
 	int GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList);
 	int GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList);
 	
 	// HW3
 	int dotProduct(GzMatrix a, GzMatrix b, GzMatrix res);
+	int GzRender::crossProduct(float* a, float* b, float* res);
 	int applyTrans(GzMatrix matrix, GzCoord vertex);
 
 	int GzDefaultCamera();
@@ -92,14 +94,16 @@ public:
 	float GzRender::getProduct(float* a, float* b);
 	int GzRender::normToImageSpace(GzMatrix m, GzCoord n);
 	int GzRender::GzVecNomalize(float* x);
-	int GzRender::lightingEquation(Data& data);
+	int GzRender::lightingEquation(Data& data, GzCoord N);
 	int GzRender::GzXnormPush(GzMatrix matrix);
 	int GzRender::GzVecMultiplyConst(float* x, float y, float* res);
 	int GzRender::GzCoordMinus(GzCoord x, GzCoord y);
 	int GzRender::GzVecPlus(float* x, float* y);
 
 	//int GzRender::SLflat(Data data);
-	int GzRender::interpolateZ(Point3d p1, Point3d p2, Point3d p3, int z);
+	int GzRender::interpolateZ(Data* data);
+	int GzRender::advanceEdge(Edge& e, float delta);
+	int GzRender::advanceSpan(Span& s, float delta);
 };
 
 #endif
