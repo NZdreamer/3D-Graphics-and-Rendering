@@ -622,31 +622,21 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 	while (
 		round(edgeShort.cur.y) < 256 && edgeShort.cur.y <= stopVertex.y) {	// include bottom, exclude top pixel
 
-
 		// span setup and advance
 		// span setup
 		if (isV2Left) {
 			L = edgeShort.cur;
 			R = edgeLong.cur;
-			/*span = Span(edgeShort.cur, edgeLong.cur);
-			deltaX = ceil(edgeShort.cur.x - edgeShort.cur.x);*/
 		}
 		else {
 			L = edgeLong.cur;
 			R = edgeShort.cur;
-			/*span = Span(edgeLong.cur, edgeShort.cur);
-			deltaX = ceil(edgeLong.cur.x - edgeLong.cur.x);*/
-
 		}
 		Span span(L, R);
-
-		//*span.current.y = *edge13.current.y;
 		float deltaX = ceil(L.x) - L.x;
 
 		// span advance		
 		advanceSpan(span, deltaX);
-		//span.cur.x = span.cur.x + deltaX;
-		//span.cur.z = span.cur.z + span.slopeZ * deltaX;
 
 		while (round(span.cur.x) < 256 && span.cur.x <= span.end.x) {	// include right, exclude left pixel
 			// Test interpolated-Z against FB-Z for each pixel - lowest Z wins
@@ -656,13 +646,23 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 			int position = ARRAY(round(span.cur.x), round(edgeLong.cur.y));
 			//if (position >= 256 * 256) continue;
 			if (span.cur.x >= 0 && edgeLong.cur.y >= 0 && pixelbuffer[position].z > span.cur.z) {
-				GzPut(span.cur.x,
-					edgeLong.cur.y,
-					ctoi(flatcolor[0]),
-					ctoi(flatcolor[1]),
-					ctoi(flatcolor[2]),
-					1,
-					span.cur.z);
+				switch (interp_mode) {
+				case GZ_FLAT:
+					GzPut(span.cur.x, edgeLong.cur.y,
+						ctoi(flatcolor[0]), ctoi(flatcolor[1]), ctoi(flatcolor[2]), 1, span.cur.z);
+					break;
+				case GZ_COLOR:
+					GzPut(span.cur.x, edgeLong.cur.y,
+						ctoi(span.cur.r), ctoi(span.cur.g), ctoi(span.cur.b), 1, span.cur.z);
+					break;
+				case GZ_NORMALS:
+					Data data(span.cur);
+					lightingEquation(data, data.normal);
+					GzPut(span.cur.x, edgeLong.cur.y,
+						ctoi(data.color[0]), ctoi(data.color[1]), ctoi(data.color[2]), 1, span.cur.z);
+					break;
+				}
+
 				//pixelbuffer[position].red = ctoi(flatcolor[0]);
 				//pixelbuffer[position].green = ctoi(flatcolor[1]);
 				//pixelbuffer[position].blue = ctoi(flatcolor[2]);
@@ -671,8 +671,6 @@ int GzRender::scanLine(Edge& edgeShort, Edge& edgeLong, bool isV2Left, Point3d s
 			// span advance	
 			advanceSpan(span, 1);
 
-			//span.cur.x += 1;
-			//span.cur.z += span.slopeZ;
 		}
 
 		advanceEdge(edgeShort, 1);
@@ -750,7 +748,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		interpolateZ(data);
 	}
 	else if (interp_mode == GZ_COLOR) {
-
+		lightingEquation(data[0], data[0].normal);
+		lightingEquation(data[1], data[1].normal);
+		lightingEquation(data[2], data[2].normal);
+		interpolateZ(data);
+	}
+	else if (interp_mode == GZ_NORMALS) {
+		interpolateZ(data);
 	}
 	
 
@@ -776,9 +780,9 @@ int GzRender::interpolateZ(Data* data) {
 	// sort v1, v2, v3 by y in increasing order
 	std::sort(data, data + 3, GzCoordCmp);
 
-	Point3d p1(data[0].v);
-	Point3d p2(data[1].v);
-	Point3d p3(data[2].v);
+	Point3d p1(data[0]);
+	Point3d p2(data[1]);
+	Point3d p3(data[2]);
 
 	// set up edge for three edges
 	Edge edge12(p1, p2);
@@ -797,7 +801,6 @@ int GzRender::interpolateZ(Data* data) {
 
 	// advance edges
 	float deltaY = ceil(p1.y) - p1.y;
-
 
 	// advance edge12 and edge13
 	advanceEdge(edge12, deltaY);
@@ -820,12 +823,36 @@ int GzRender::advanceEdge(Edge& e, float delta) {
 	e.cur.y = e.cur.y + delta;
 	e.cur.z = e.cur.z + e.slopeZ * delta;
 
+	if (interp_mode == GZ_COLOR) {
+		e.cur.r = e.cur.r + (e.end.r - e.start.r) / (e.end.y - e.start.y) * delta;
+		e.cur.g = e.cur.g + (e.end.g - e.start.g) / (e.end.y - e.start.y) * delta;
+		e.cur.b = e.cur.b + (e.end.b - e.start.b) / (e.end.y - e.start.y) * delta;
+	}
+
+	else if (interp_mode == GZ_NORMALS) {
+		e.cur.nx = e.cur.nx + (e.end.nx - e.start.nx) / (e.end.y - e.start.y) * delta;
+		e.cur.ny = e.cur.ny + (e.end.ny - e.start.ny) / (e.end.y - e.start.y) * delta;
+		e.cur.nz = e.cur.nz + (e.end.nz - e.start.nz) / (e.end.y - e.start.y) * delta;
+	}
+
 	return GZ_SUCCESS;
 }
 
 int GzRender::advanceSpan(Span& s, float delta) {
 	s.cur.x = s.cur.x + delta;
 	s.cur.z = s.cur.z + s.slopeZ * delta;
+
+	if (interp_mode == GZ_COLOR) {
+		s.cur.r = s.cur.r + (s.end.r - s.start.r) / (s.end.x - s.start.x) * delta;
+		s.cur.g = s.cur.g + (s.end.g - s.start.g) / (s.end.x - s.start.x) * delta;
+		s.cur.b = s.cur.b + (s.end.b - s.start.b) / (s.end.x - s.start.x) * delta;
+	}
+
+	else if (interp_mode == GZ_NORMALS) {
+		s.cur.nx = s.cur.nx + (s.end.nx - s.start.nx) / (s.end.x - s.start.x) * delta;
+		s.cur.ny = s.cur.ny + (s.end.ny - s.start.ny) / (s.end.x - s.start.x) * delta;
+		s.cur.nz = s.cur.nz + (s.end.nz - s.start.nz) / (s.end.x - s.start.x) * delta;
+	}
 
 	return GZ_SUCCESS;
 }

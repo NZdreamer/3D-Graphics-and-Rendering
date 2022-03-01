@@ -2,6 +2,19 @@
 
 #include "gz.h"
 
+class Point3d;
+class Data;
+
+class Data {
+public:
+	GzCoord v;
+	GzCoord normal;
+	GzColor color;
+
+	Data() = default;
+	Data(const Point3d& p);
+};
+
 class Point3d {
 public:
 	float x;
@@ -20,6 +33,7 @@ public:
 	Point3d(float x, float y, float z);
 	Point3d(GzCoord c);
 	Point3d(const Point3d& p);
+	Point3d(const Data& d);
 };
 
 class Edge
@@ -54,9 +68,5 @@ public:
 //	float slopeZ; // dz/dx	(RZ-LZ)/(RX-LX)
 //};
 
-struct Data {
-	GzCoord v;
-	GzCoord normal;
-	GzColor color;
-};
+
 
