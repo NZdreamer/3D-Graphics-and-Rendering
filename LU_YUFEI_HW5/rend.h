@@ -17,18 +17,16 @@
 #define	MATLEVELS	100		/* how many matrix pushes allowed */
 #define	MAX_LIGHTS	10		/* how many lights allowed */
 
-#ifndef GzTexture
-#define GzTexture	GzPointer
-#endif
 
 class Point3d;
 class Data;
 
 class Data {
 public:
-	GzCoord v;
+	GzCoord position;
 	GzCoord normal;
 	GzColor color;
+	GzTextureIndex texture;
 
 	Data() = default;
 	Data(const Point3d& p);
@@ -47,6 +45,9 @@ public:
 	float nx;
 	float ny;
 	float nz;
+
+	float u;
+	float v;
 
 	Point3d() = default;
 	Point3d(float x, float y, float z);
@@ -80,13 +81,13 @@ public:
 };
 
 
-class GzRender{			/* define a renderer */
-  
+class GzRender {			/* define a renderer */
+
 
 public:
 	unsigned short	xres;
 	unsigned short	yres;
-	GzPixel		*pixelbuffer;		/* frame buffer array */
+	GzPixel* pixelbuffer;		/* frame buffer array */
 	char* framebuffer;
 
 	GzCamera		m_camera;
@@ -105,7 +106,7 @@ public:
 
 	short	normLevel;
 
-  	// Constructors
+	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
 
@@ -113,7 +114,7 @@ public:
 	int GzDefault();
 	int GzBeginRender();
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
-	int GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth	*z);
+	int GzGet(int i, int j, GzIntensity* r, GzIntensity* g, GzIntensity* b, GzIntensity* a, GzDepth* z);
 
 	int GzFlushDisplay2File(FILE* outfile);
 	int GzFlushDisplay2FrameBuffer();
@@ -121,9 +122,9 @@ public:
 	// HW2: Render methods
 	int scanLineHalf(Edge& edge12, Edge& edge13, bool isV2Left, Point3d v2);
 
-	int GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList);
-	int GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList);
-	
+	int GzPutAttribute(int numAttributes, GzToken* nameList, GzPointer* valueList);
+	int GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueList);
+
 	// HW3
 	int dotProduct(GzMatrix a, GzMatrix b, GzMatrix res);
 	int GzRender::crossProduct(float* a, float* b, float* res);
@@ -133,11 +134,11 @@ public:
 	int GzPutCamera(GzCamera camera);
 	int GzPushMatrix(GzMatrix matrix);
 	int GzPopMatrix();
-	
+
 	// Extra methods: NOT part of API - just for general assistance */
-	inline int ARRAY(int x, int y){return (x+y*xres);}	/* simplify fbuf indexing */
-	inline short	ctoi(float color) {return(short)((int)(color * ((1 << 12) - 1)));}		/* convert float color to GzIntensity short */
-	
+	inline int ARRAY(int x, int y) { return (x + y * xres); }	/* simplify fbuf indexing */
+	inline short	ctoi(float color) { return(short)((int)(color * ((1 << 12) - 1))); }		/* convert float color to GzIntensity short */
+
 	// Object Translation
 	int GzRotXMat(float degree, GzMatrix mat);
 	int GzRotYMat(float degree, GzMatrix mat);
@@ -159,6 +160,10 @@ public:
 	int GzRender::scanLine(Data* data);
 	int GzRender::advanceEdge(Edge& e, float delta);
 	int GzRender::advanceSpan(Span& s, float delta);
+
+//	int GzRender::interpolate_uv(Point3d start, Point3d end, Point3d& p, float delta);
+	void GzRender::worldToScreenSpace(GzTextureIndex& tex, float zs);
+	void GzRender::screenToWorldSpace(GzTextureIndex& tex, float zs);
 };
 
 #endif

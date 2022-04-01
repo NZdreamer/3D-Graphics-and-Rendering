@@ -2,15 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{32aaef20-9d82-489d-afbd-148766b03399}</UniqueIdentifier>
+      <UniqueIdentifier>{c9430ee8-73ae-48b1-b10d-034547520804}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{8e1670a3-1373-42a4-a095-74e6778ae7b0}</UniqueIdentifier>
+      <UniqueIdentifier>{81cc9d97-6c89-4b13-a893-828b44e54325}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{7e4d6ba4-b0f5-4751-82ff-4a672caafabf}</UniqueIdentifier>
+      <UniqueIdentifier>{3da7fdcc-5fd8-45bd-b9e9-8100cc975da9}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
   </ItemGroup>
@@ -18,7 +18,7 @@
     <ClCompile Include="Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Application4.cpp">
+    <ClCompile Include="Application5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CS580HW.cpp">
@@ -45,6 +45,9 @@
     <ClCompile Include="StdAfx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tex_fun.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TranslateDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,7 +61,7 @@
     <ClInclude Include="Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Application4.h">
+    <ClInclude Include="Application5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CS580HW.h">
